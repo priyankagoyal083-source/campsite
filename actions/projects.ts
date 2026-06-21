@@ -21,11 +21,19 @@ export async function createProject(formData: FormData) {
     .select()
     .single();
 
-  if (error) return { error: error.message };
+  if (error) {
+    console.error("Project insert error:", error);
+    return { error: error.message };
+  }
 
-  await supabase
+  const { error: memberError } = await supabase
     .from("project_members")
     .insert({ project_id: project.id, user_id: user.id, role: "owner" });
+
+  if (memberError) {
+    console.error("Member insert error:", memberError);
+    return { error: memberError.message };
+  }
 
   revalidatePath("/dashboard");
   redirect(`/projects/${project.id}`);

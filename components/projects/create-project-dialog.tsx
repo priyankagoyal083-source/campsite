@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
+import { toast } from "sonner";
 
 export function CreateProjectDialog({
   children,
@@ -24,8 +25,12 @@ export function CreateProjectDialog({
 
   async function handleSubmit(formData: FormData) {
     setPending(true);
-    await createProject(formData);
+    const result = await createProject(formData);
     setPending(false);
+    if (result?.error) {
+      toast.error(result.error);
+      return;
+    }
     setOpen(false);
   }
 
