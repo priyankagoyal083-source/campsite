@@ -24,6 +24,8 @@ export function TodoListCard({
   members,
   isFirst,
   isLast,
+  comments,
+  currentUserId,
 }: {
   list: { id: string; name: string; description: string | null };
   todos: {
@@ -37,6 +39,8 @@ export function TodoListCard({
   members: Profile[];
   isFirst: boolean;
   isLast: boolean;
+  comments: { id: string; todo_id: string; content: string; created_by: string; created_at: string }[];
+  currentUserId: string;
 }) {
   const [editOpen, setEditOpen] = useState(false);
   const completedCount = todos.filter((t) => t.completed).length;
@@ -120,6 +124,8 @@ export function TodoListCard({
                 todo={todo}
                 projectId={projectId}
                 members={members}
+                comments={comments.filter((c) => c.todo_id === todo.id)}
+                currentUserId={currentUserId}
               />
             ))}
           </div>

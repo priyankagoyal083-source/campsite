@@ -12,12 +12,17 @@ export default async function TodosPage({
   const { projectId } = await params;
   const supabase = await createClient();
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   const { data: todoLists } = await supabase
     .from("todo_lists")
     .select("*")
     .eq("project_id", projectId)
     .order("position", { ascending: true });
 
+  const todoIds: string[] = [];
   const { data: allTodos } = await supabase
     .from("todos")
     .select("*")
@@ -26,6 +31,18 @@ export default async function TodosPage({
       (todoLists || []).map((l) => l.id)
     )
     .order("position", { ascending: true });
+
+  (allTodos || []).forEach((t) => todoIds.push(t.id));
+
+  let allComments: any[] = [];
+  if (todoIds.length > 0) {
+    const { data } = await supabase
+      .from("todo_comments")
+      .select("*")
+      .in("todo_id", todoIds)
+      .order("created_at", { ascending: true });
+    allComments = data || [];
+  }
 
   const { data: memberRows } = await supabase
     .from("project_members")
@@ -79,6 +96,8 @@ export default async function TodosPage({
               members={members}
               isFirst={index === 0}
               isLast={index === todoLists.length - 1}
+              comments={allComments}
+              currentUserId={user!.id}
             />
           ))}
         </div>
