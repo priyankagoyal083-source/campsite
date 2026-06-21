@@ -129,6 +129,76 @@ export async function deleteTodo(todoId: string, projectId: string) {
   revalidatePath(`/projects/${projectId}/todos`);
 }
 
+export async function updateTodoList(
+  listId: string,
+  projectId: string,
+  formData: FormData
+) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Unauthorized");
+
+  const name = formData.get("name") as string;
+  const description = formData.get("description") as string;
+
+  const { error } = await supabase
+    .from("todo_lists")
+    .update({
+      name,
+      description: description || null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", listId);
+
+  if (error) return { error: error.message };
+  revalidatePath(`/projects/${projectId}/todos`);
+}
+
+export async function reorderTodoList(
+  listId: string,
+  projectId: string,
+  direction: "up" | "down"
+) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Unauthorized");
+
+  const { data: lists } = await supabase
+    .from("todo_lists")
+    .select("id, position")
+    .eq("project_id", projectId)
+    .order("position", { ascending: true });
+
+  if (!lists) return { error: "Failed to fetch lists" };
+
+  const currentIndex = lists.findIndex((l) => l.id === listId);
+  if (currentIndex === -1) return { error: "List not found" };
+
+  const swapIndex =
+    direction === "up" ? currentIndex - 1 : currentIndex + 1;
+
+  if (swapIndex < 0 || swapIndex >= lists.length) return;
+
+  const current = lists[currentIndex];
+  const swap = lists[swapIndex];
+
+  await supabase
+    .from("todo_lists")
+    .update({ position: swap.position })
+    .eq("id", current.id);
+
+  await supabase
+    .from("todo_lists")
+    .update({ position: current.position })
+    .eq("id", swap.id);
+
+  revalidatePath(`/projects/${projectId}/todos`);
+}
+
 export async function deleteTodoList(listId: string, projectId: string) {
   const supabase = await createClient();
   const {

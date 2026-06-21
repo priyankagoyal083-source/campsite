@@ -68,7 +68,7 @@ export default async function TodosPage({
         </div>
       ) : (
         <div className="space-y-4">
-          {todoLists.map((list) => (
+          {todoLists.map((list, index) => (
             <TodoListCard
               key={list.id}
               list={list}
@@ -77,6 +77,8 @@ export default async function TodosPage({
               )}
               projectId={projectId}
               members={members}
+              isFirst={index === 0}
+              isLast={index === todoLists.length - 1}
             />
           ))}
         </div>
