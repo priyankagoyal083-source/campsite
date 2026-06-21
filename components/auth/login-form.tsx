@@ -5,11 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useActionState } from "react";
-import Link from "next/link";
 
 export function LoginForm() {
   const [state, formAction, pending] = useActionState(
-    async (_prev: { error: string } | null, formData: FormData) => {
+    async (_prev: { error?: string } | null, formData: FormData) => {
       const result = await signIn(formData);
       return result ?? null;
     },
@@ -46,12 +45,6 @@ export function LoginForm() {
       <Button type="submit" className="w-full" disabled={pending}>
         {pending ? "Signing in..." : "Sign in"}
       </Button>
-      <p className="text-center text-sm text-muted-foreground">
-        Don&apos;t have an account?{" "}
-        <Link href="/signup" className="text-primary underline">
-          Sign up
-        </Link>
-      </p>
     </form>
   );
 }

@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
-export async function signUp(formData: FormData) {
+export async function signUp(formData: FormData, redirectTo?: string) {
   const supabase = await createClient();
 
   const email = formData.get("email") as string;
@@ -24,10 +24,15 @@ export async function signUp(formData: FormData) {
   }
 
   revalidatePath("/", "layout");
+
+  if (redirectTo) {
+    return { success: true };
+  }
+
   redirect("/dashboard");
 }
 
-export async function signIn(formData: FormData) {
+export async function signIn(formData: FormData, redirectTo?: string) {
   const supabase = await createClient();
 
   const email = formData.get("email") as string;
@@ -43,6 +48,11 @@ export async function signIn(formData: FormData) {
   }
 
   revalidatePath("/", "layout");
+
+  if (redirectTo) {
+    return { success: true };
+  }
+
   redirect("/dashboard");
 }
 

@@ -7,10 +7,14 @@ export async function updateSession(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
+  if (request.nextUrl.pathname.startsWith("/signup")) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    return NextResponse.redirect(url);
+  }
+
   if (!supabaseUrl || !supabaseKey || !supabaseUrl.startsWith("http")) {
-    const isAuthPage =
-      request.nextUrl.pathname.startsWith("/login") ||
-      request.nextUrl.pathname.startsWith("/signup");
+    const isAuthPage = request.nextUrl.pathname.startsWith("/login");
     if (!isAuthPage) {
       const url = request.nextUrl.clone();
       url.pathname = "/login";
@@ -44,13 +48,12 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const isAuthPage =
-    request.nextUrl.pathname.startsWith("/login") ||
-    request.nextUrl.pathname.startsWith("/signup");
+  const isAuthPage = request.nextUrl.pathname.startsWith("/login");
   const isAuthCallback = request.nextUrl.pathname.startsWith("/auth/callback");
+  const isInvitePage = request.nextUrl.pathname.startsWith("/invite/");
   const isPublicPage = request.nextUrl.pathname === "/";
 
-  if (!user && !isAuthPage && !isAuthCallback && !isPublicPage) {
+  if (!user && !isAuthPage && !isAuthCallback && !isInvitePage && !isPublicPage) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
