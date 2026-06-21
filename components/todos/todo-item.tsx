@@ -91,7 +91,7 @@ export function TodoItem({
         />
         <span
           className={cn(
-            "flex-1 text-sm cursor-pointer",
+            "flex-1 text-base cursor-pointer",
             optimisticCompleted && "line-through text-muted-foreground"
           )}
           onClick={() => setExpanded(!expanded)}
@@ -101,7 +101,7 @@ export function TodoItem({
         {comments.length > 0 && (
           <button
             onClick={() => setExpanded(!expanded)}
-            className="flex items-center gap-0.5 text-xs text-muted-foreground hover:text-foreground"
+            className="flex items-center gap-0.5 text-sm text-muted-foreground hover:text-foreground"
           >
             <MessageSquare className="h-3 w-3" />
             {comments.length}
@@ -186,10 +186,10 @@ export function TodoItem({
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-medium">
+                        <span className="text-sm font-medium">
                           {author?.full_name || author?.email || "Unknown"}
                         </span>
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-sm text-muted-foreground">
                           {new Date(comment.created_at).toLocaleDateString()}
                         </span>
                         {comment.created_by === currentUserId && (
@@ -203,7 +203,7 @@ export function TodoItem({
                           </button>
                         )}
                       </div>
-                      <p className="text-sm whitespace-pre-wrap">
+                      <p className="text-base whitespace-pre-wrap">
                         {comment.content}
                       </p>
                     </div>
