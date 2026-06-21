@@ -47,11 +47,17 @@ export default async function AppLayout({
     projects = data || [];
   }
 
+  const { count: unreadCount } = await supabase
+    .from("notifications")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", user.id)
+    .eq("read", false);
+
   return (
     <div className="flex h-screen overflow-hidden">
       <Sidebar projects={projects} />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Header profile={profile} />
+        <Header profile={profile} unreadNotifications={unreadCount || 0} />
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
           {children}
         </main>

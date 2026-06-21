@@ -9,9 +9,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { LogOut } from "lucide-react";
+import { NotificationBell } from "./notification-bell";
 import type { Profile } from "@/lib/types/database";
 
-export function Header({ profile }: { profile: Profile }) {
+export function Header({
+  profile,
+  unreadNotifications,
+}: {
+  profile: Profile;
+  unreadNotifications: number;
+}) {
   const initials = profile.full_name
     ? profile.full_name
         .split(" ")
@@ -22,7 +29,8 @@ export function Header({ profile }: { profile: Profile }) {
     : profile.email[0].toUpperCase();
 
   return (
-    <header className="border-b bg-card px-4 md:px-6 h-14 flex items-center justify-end">
+    <header className="border-b bg-card px-4 md:px-6 h-14 flex items-center justify-end gap-2">
+      <NotificationBell initialCount={unreadNotifications} />
       <DropdownMenu>
         <DropdownMenuTrigger className="flex items-center gap-2 outline-none">
           <span className="text-sm hidden sm:inline">

@@ -104,6 +104,12 @@ export async function assignTodo(
   } = await supabase.auth.getUser();
   if (!user) throw new Error("Unauthorized");
 
+  const { data: todo } = await supabase
+    .from("todos")
+    .select("title")
+    .eq("id", todoId)
+    .single();
+
   const { error } = await supabase
     .from("todos")
     .update({
@@ -113,6 +119,25 @@ export async function assignTodo(
     .eq("id", todoId);
 
   if (error) return { error: error.message };
+
+  if (assignedTo && assignedTo !== user.id && todo) {
+    const { data: assigner } = await supabase
+      .from("profiles")
+      .select("full_name, email")
+      .eq("id", user.id)
+      .single();
+
+    const assignerName = assigner?.full_name || assigner?.email || "Someone";
+
+    await supabase.from("notifications").insert({
+      user_id: assignedTo,
+      type: "todo_assigned",
+      title: "To-do assigned to you",
+      message: `${assignerName} assigned you "${todo.title}"`,
+      link: `/projects/${projectId}/todos`,
+    });
+  }
+
   revalidatePath(`/projects/${projectId}/todos`);
 }
 
