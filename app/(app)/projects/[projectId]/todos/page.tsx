@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { TodoListCard } from "@/components/todos/todo-list-card";
+import { TodoListsDnd } from "@/components/todos/todo-lists-dnd";
 import { CreateTodoListDialog } from "@/components/todos/create-todo-list-dialog";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
@@ -22,7 +22,6 @@ export default async function TodosPage({
     .eq("project_id", projectId)
     .order("position", { ascending: true });
 
-  const todoIds: string[] = [];
   const { data: allTodos } = await supabase
     .from("todos")
     .select("*")
@@ -32,7 +31,7 @@ export default async function TodosPage({
     )
     .order("position", { ascending: true });
 
-  (allTodos || []).forEach((t) => todoIds.push(t.id));
+  const todoIds = (allTodos || []).map((t) => t.id);
 
   let allComments: any[] = [];
   if (todoIds.length > 0) {
@@ -85,23 +84,14 @@ export default async function TodosPage({
           </CreateTodoListDialog>
         </div>
       ) : (
-        <div className="space-y-12">
-          {todoLists.map((list, index) => (
-            <TodoListCard
-              key={list.id}
-              list={list}
-              todos={(allTodos || []).filter(
-                (t) => t.todo_list_id === list.id
-              )}
-              projectId={projectId}
-              members={members}
-              isFirst={index === 0}
-              isLast={index === todoLists.length - 1}
-              comments={allComments}
-              currentUserId={user!.id}
-            />
-          ))}
-        </div>
+        <TodoListsDnd
+          todoLists={todoLists}
+          allTodos={allTodos || []}
+          allComments={allComments}
+          projectId={projectId}
+          members={members}
+          currentUserId={user!.id}
+        />
       )}
     </>
   );

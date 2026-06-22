@@ -141,6 +141,40 @@ export async function assignTodo(
   revalidatePath(`/projects/${projectId}/todos`);
 }
 
+export async function moveTodoToList(
+  todoId: string,
+  newListId: string,
+  projectId: string
+) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Unauthorized");
+
+  const { data: maxPos } = await supabase
+    .from("todos")
+    .select("position")
+    .eq("todo_list_id", newListId)
+    .order("position", { ascending: false })
+    .limit(1)
+    .single();
+
+  const position = (maxPos?.position ?? -1) + 1;
+
+  const { error } = await supabase
+    .from("todos")
+    .update({
+      todo_list_id: newListId,
+      position,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", todoId);
+
+  if (error) return { error: error.message };
+  revalidatePath(`/projects/${projectId}/todos`);
+}
+
 export async function deleteTodo(todoId: string, projectId: string) {
   const supabase = await createClient();
   const {

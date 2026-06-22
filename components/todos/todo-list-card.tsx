@@ -1,5 +1,6 @@
 "use client";
 
+import { useDroppable } from "@dnd-kit/core";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -13,6 +14,7 @@ import { AddTodoForm } from "./add-todo-form";
 import { EditTodoListDialog } from "./edit-todo-list-dialog";
 import { deleteTodoList, reorderTodoList } from "@/actions/todos";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import type { Profile } from "@/lib/types/database";
 import { useState } from "react";
 
@@ -60,6 +62,7 @@ export function TodoListCard({
   isLast,
   comments,
   currentUserId,
+  isDndEnabled,
 }: {
   list: { id: string; name: string; description: string | null };
   todos: {
@@ -75,8 +78,10 @@ export function TodoListCard({
   isLast: boolean;
   comments: { id: string; todo_id: string; content: string; created_by: string; created_at: string }[];
   currentUserId: string;
+  isDndEnabled?: boolean;
 }) {
   const [editOpen, setEditOpen] = useState(false);
+  const { setNodeRef, isOver } = useDroppable({ id: list.id });
   const completedCount = todos.filter((t) => t.completed).length;
 
   async function handleDelete() {
@@ -142,7 +147,13 @@ export function TodoListCard({
           </DropdownMenu>
         </header>
 
-        <ul className="divide-y divide-bc-divider border-t border-bc-divider">
+        <ul
+          ref={setNodeRef}
+          className={cn(
+            "divide-y divide-bc-divider border-t border-bc-divider min-h-[40px] transition-colors rounded",
+            isOver && "bg-bc-link/5 border-bc-link/30"
+          )}
+        >
           {todos.map((todo) => (
             <TodoItem
               key={todo.id}
@@ -151,8 +162,14 @@ export function TodoListCard({
               members={members}
               comments={comments.filter((c) => c.todo_id === todo.id)}
               currentUserId={currentUserId}
+              isDraggable={isDndEnabled}
             />
           ))}
+          {todos.length === 0 && (
+            <li className="py-4 text-center text-sm text-bc-meta">
+              Drop a to-do here
+            </li>
+          )}
         </ul>
 
         <AddTodoForm todoListId={list.id} projectId={projectId} />

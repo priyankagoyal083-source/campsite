@@ -11,7 +11,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Trash2, MessageSquare, FileText, MoreHorizontal } from "lucide-react";
+import { useDraggable } from "@dnd-kit/core";
+import { Trash2, MessageSquare, FileText, MoreHorizontal, GripVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Profile } from "@/lib/types/database";
 import { useOptimistic, useTransition, useState, useRef } from "react";
@@ -63,6 +64,7 @@ export function TodoItem({
   members,
   comments,
   currentUserId,
+  isDraggable,
 }: {
   todo: {
     id: string;
@@ -75,6 +77,7 @@ export function TodoItem({
   members: Profile[];
   comments: TodoComment[];
   currentUserId: string;
+  isDraggable?: boolean;
 }) {
   const [optimisticCompleted, setOptimisticCompleted] = useOptimistic(
     todo.completed
@@ -83,6 +86,13 @@ export function TodoItem({
   const [expanded, setExpanded] = useState(false);
   const [posting, setPosting] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
+
+  const { attributes, listeners, setNodeRef, transform, isDragging } =
+    useDraggable({ id: todo.id, disabled: !isDraggable });
+
+  const dragStyle = transform
+    ? { transform: `translate(${transform.x}px, ${transform.y}px)` }
+    : undefined;
 
   const assignee = members.find((m) => m.id === todo.assigned_to);
 
@@ -115,8 +125,22 @@ export function TodoItem({
   }
 
   return (
-    <li className="py-3 px-1">
-      <div className="flex items-center gap-3">
+    <li
+      ref={setNodeRef}
+      style={dragStyle}
+      className={cn("py-3 px-1", isDragging && "opacity-30")}
+    >
+      <div className="flex items-center gap-3 group">
+        {isDraggable && (
+          <button
+            {...attributes}
+            {...listeners}
+            className="shrink-0 cursor-grab active:cursor-grabbing text-bc-meta/40 hover:text-bc-meta touch-none"
+            aria-label="Drag to reorder"
+          >
+            <GripVertical className="h-4 w-4" />
+          </button>
+        )}
         <RoundCheckbox checked={optimisticCompleted} onChange={handleToggle} />
 
         <span
