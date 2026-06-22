@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import { ProjectNav } from "@/components/projects/project-nav";
+import { DeleteProjectButton } from "@/components/projects/delete-project-button";
 import Link from "next/link";
 
 export default async function ProjectLayout({
@@ -44,9 +45,14 @@ export default async function ProjectLayout({
       >
         &larr; Dashboard
       </Link>
-      <h1 className="text-2xl font-extrabold tracking-tight mt-1 mb-4">
-        {project.name}
-      </h1>
+      <div className="flex items-center justify-between mt-1 mb-4">
+        <h1 className="text-2xl font-extrabold tracking-tight">
+          {project.name}
+        </h1>
+        {membership.role === "owner" && (
+          <DeleteProjectButton projectId={projectId} />
+        )}
+      </div>
       <ProjectNav projectId={projectId} />
       {children}
     </div>
