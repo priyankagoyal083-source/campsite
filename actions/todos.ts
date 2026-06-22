@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { sendEmail } from "@/lib/email";
 
 export async function createTodoList(projectId: string, formData: FormData) {
   const supabase = await createClient();
@@ -136,6 +137,34 @@ export async function assignTodo(
       message: `${assignerName} assigned you "${todo.title}"`,
       link: `/projects/${projectId}/todos`,
     });
+
+    const { data: assignee } = await supabase
+      .from("profiles")
+      .select("email, full_name")
+      .eq("id", assignedTo)
+      .single();
+
+    const { data: project } = await supabase
+      .from("projects")
+      .select("name")
+      .eq("id", projectId)
+      .single();
+
+    if (assignee?.email) {
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://basecamp-nu-bice.vercel.app";
+      sendEmail({
+        to: assignee.email,
+        subject: `[${project?.name || "Campsite"}] To-do assigned to you: ${todo.title}`,
+        html: `
+          <p>Hi ${assignee.full_name || "there"},</p>
+          <p><strong>${assignerName}</strong> assigned you a to-do:</p>
+          <blockquote style="border-left:3px solid #ccc;padding-left:12px;margin:12px 0;color:#555;">
+            ${todo.title}
+          </blockquote>
+          <p><a href="${appUrl}/projects/${projectId}/todos">View in Campsite</a></p>
+        `,
+      });
+    }
   }
 
   revalidatePath(`/projects/${projectId}/todos`);
