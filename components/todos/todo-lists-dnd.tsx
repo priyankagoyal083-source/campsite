@@ -10,7 +10,7 @@ import {
   type DragStartEvent,
   type DragEndEvent,
 } from "@dnd-kit/core";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { TodoListCard } from "./todo-list-card";
 import { moveTodoToList } from "@/actions/todos";
 import { toast } from "sonner";
@@ -56,6 +56,10 @@ export function TodoListsDnd({
 }) {
   const [allTodos, setAllTodos] = useState(initialTodos);
   const [activeId, setActiveId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setAllTodos(initialTodos);
+  }, [initialTodos]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {

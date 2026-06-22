@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export function AddTodoForm({
   todoListId,
@@ -16,6 +17,7 @@ export function AddTodoForm({
   const formRef = useRef<HTMLFormElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [isAdding, setIsAdding] = useState(false);
+  const router = useRouter();
 
   async function handleSubmit(formData: FormData) {
     const title = formData.get("title") as string;
@@ -23,6 +25,7 @@ export function AddTodoForm({
     await createTodo(todoListId, projectId, formData);
     formRef.current?.reset();
     inputRef.current?.focus();
+    router.refresh();
   }
 
   if (!isAdding) {
