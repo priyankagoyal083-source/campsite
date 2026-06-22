@@ -1,8 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { MemberList } from "@/components/team/member-list";
 import { InviteDialog } from "@/components/team/invite-dialog";
+import { AddMemberDialog } from "@/components/team/add-member-dialog";
 import { Button } from "@/components/ui/button";
-import { UserPlus } from "lucide-react";
+import { UserPlus, UserRoundPlus } from "lucide-react";
 
 export default async function PeoplePage({
   params,
@@ -43,12 +44,20 @@ export default async function PeoplePage({
           Team members ({members.length})
         </h2>
         {isOwner && (
-          <InviteDialog projectId={projectId}>
-            <Button size="sm">
-              <UserPlus className="h-4 w-4 mr-1" />
-              Invite
-            </Button>
-          </InviteDialog>
+          <div className="flex gap-2">
+            <AddMemberDialog projectId={projectId}>
+              <Button size="sm" variant="default">
+                <UserRoundPlus className="h-4 w-4 mr-1" />
+                Add member
+              </Button>
+            </AddMemberDialog>
+            <InviteDialog projectId={projectId}>
+              <Button size="sm" variant="outline">
+                <UserPlus className="h-4 w-4 mr-1" />
+                Invite by email
+              </Button>
+            </InviteDialog>
+          </div>
         )}
       </div>
 

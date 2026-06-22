@@ -3,6 +3,48 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
+export async function addExistingMember(projectId: string, userId: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Unauthorized");
+
+  const { error } = await supabase
+    .from("project_members")
+    .insert({ project_id: projectId, user_id: userId, role: "member" });
+
+  if (error) {
+    if (error.code === "23505") return { error: "Already a member" };
+    return { error: error.message };
+  }
+
+  revalidatePath(`/projects/${projectId}/people`);
+  revalidatePath("/dashboard");
+}
+
+export async function getAvailableUsers(projectId: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const { data: existingMembers } = await supabase
+    .from("project_members")
+    .select("user_id")
+    .eq("project_id", projectId);
+
+  const memberIds = (existingMembers || []).map((m) => m.user_id);
+
+  const { data: allUsers } = await supabase
+    .from("profiles")
+    .select("id, full_name, email")
+    .order("full_name", { ascending: true });
+
+  return (allUsers || []).filter((u) => !memberIds.includes(u.id));
+}
+
 export async function inviteMember(projectId: string, formData: FormData) {
   const supabase = await createClient();
   const {
