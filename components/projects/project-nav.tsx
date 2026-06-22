@@ -15,7 +15,7 @@ export function ProjectNav({ projectId }: { projectId: string }) {
   const pathname = usePathname();
 
   return (
-    <nav className="flex gap-1 border-b mb-6">
+    <nav className="flex gap-4 mb-8">
       {tabs.map((tab) => {
         const href = `/projects/${projectId}/${tab.href}`;
         const isActive = pathname.startsWith(href);
@@ -24,10 +24,10 @@ export function ProjectNav({ projectId }: { projectId: string }) {
             key={tab.href}
             href={href}
             className={cn(
-              "flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors",
+              "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-colors",
               isActive
-                ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:text-foreground"
+                ? "bg-primary text-primary-foreground font-semibold"
+                : "text-bc-meta hover:text-foreground hover:bg-muted"
             )}
           >
             <tab.icon className="h-4 w-4" />

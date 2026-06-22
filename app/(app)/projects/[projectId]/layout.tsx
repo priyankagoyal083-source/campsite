@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import { ProjectNav } from "@/components/projects/project-nav";
+import Link from "next/link";
 
 export default async function ProjectLayout({
   children,
@@ -37,7 +38,13 @@ export default async function ProjectLayout({
 
   return (
     <div>
-      <h1 className="text-2xl font-bold tracking-tight mb-4">
+      <Link
+        href="/dashboard"
+        className="text-sm text-bc-meta hover:text-foreground transition-colors"
+      >
+        &larr; Dashboard
+      </Link>
+      <h1 className="text-2xl font-extrabold tracking-tight mt-1 mb-4">
         {project.name}
       </h1>
       <ProjectNav projectId={projectId} />

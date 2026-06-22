@@ -2,7 +2,6 @@
 
 import { toggleTodo, deleteTodo, assignTodo } from "@/actions/todos";
 import { createTodoComment, deleteTodoComment } from "@/actions/todo-comments";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,7 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Trash2, UserCircle, MessageSquare } from "lucide-react";
+import { Trash2, MessageSquare, FileText, MoreHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Profile } from "@/lib/types/database";
 import { useOptimistic, useTransition, useState, useRef } from "react";
@@ -23,6 +22,40 @@ type TodoComment = {
   created_by: string;
   created_at: string;
 };
+
+function RoundCheckbox({
+  checked,
+  onChange,
+}: {
+  checked: boolean;
+  onChange: () => void;
+}) {
+  return (
+    <button
+      onClick={onChange}
+      className={cn(
+        "shrink-0 size-5 rounded-full border-2 flex items-center justify-center transition-colors",
+        checked
+          ? "bg-bc-green border-bc-green"
+          : "border-bc-meta/40 hover:border-bc-green"
+      )}
+      aria-label={checked ? "Mark incomplete" : "Mark complete"}
+    >
+      {checked && (
+        <svg viewBox="0 0 12 12" className="size-3 text-white">
+          <path
+            d="M2 6l3 3 5-5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      )}
+    </button>
+  );
+}
 
 export function TodoItem({
   todo,
@@ -82,104 +115,126 @@ export function TodoItem({
   }
 
   return (
-    <div>
-      <div className="flex items-center gap-2 py-1.5 px-1 group">
-        <Checkbox
-          checked={optimisticCompleted}
-          onCheckedChange={handleToggle}
-          className="shrink-0"
-        />
+    <li className="py-3 px-1">
+      <div className="flex items-center gap-3">
+        <RoundCheckbox checked={optimisticCompleted} onChange={handleToggle} />
+
         <span
           className={cn(
-            "flex-1 text-base cursor-pointer",
-            optimisticCompleted && "line-through text-muted-foreground"
+            "flex-1 text-base cursor-pointer transition-colors",
+            optimisticCompleted
+              ? "text-bc-meta"
+              : "text-foreground hover:text-bc-link"
           )}
           onClick={() => setExpanded(!expanded)}
         >
           {todo.title}
         </span>
+
         {comments.length > 0 && (
           <button
             onClick={() => setExpanded(!expanded)}
-            className="flex items-center gap-0.5 text-sm text-muted-foreground hover:text-foreground"
+            className="flex items-center gap-1 text-xs text-bc-meta bg-muted rounded-full px-2 py-0.5 hover:text-foreground"
           >
             <MessageSquare className="h-3 w-3" />
             {comments.length}
           </button>
         )}
+
+        {assignee && (
+          <DropdownMenu>
+            <DropdownMenuTrigger className="flex items-center gap-1.5 outline-none">
+              <Avatar className="h-6 w-6">
+                <AvatarFallback className="text-[10px]">
+                  {getInitials(assignee)}
+                </AvatarFallback>
+              </Avatar>
+              <span className="text-sm text-bc-meta hidden sm:inline">
+                {assignee.full_name?.split(" ")[0] || assignee.email.split("@")[0]}
+              </span>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => assignTodo(todo.id, null, projectId)}>
+                Unassign
+              </DropdownMenuItem>
+              {members.map((member) => (
+                <DropdownMenuItem
+                  key={member.id}
+                  onClick={() => assignTodo(todo.id, member.id, projectId)}
+                >
+                  {member.full_name || member.email}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+
         {todo.due_date && (
-          <span className="text-xs text-muted-foreground">
+          <span className="text-xs text-bc-meta">
             {new Date(todo.due_date).toLocaleDateString()}
           </span>
         )}
+
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
               <Button
                 variant="ghost"
-                size="icon"
-                className="h-6 w-6 opacity-0 group-hover:opacity-100"
+                size="icon-sm"
+                className="text-bc-meta opacity-0 group-hover:opacity-100 hover:opacity-100 focus:opacity-100"
               />
             }
           >
-            {assignee ? (
-              <Avatar className="h-5 w-5">
-                <AvatarFallback className="text-[10px]">
-                  {getInitials(assignee)}
-                </AvatarFallback>
-              </Avatar>
-            ) : (
-              <UserCircle className="h-4 w-4" />
-            )}
+            <MoreHorizontal className="h-4 w-4" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => assignTodo(todo.id, null, projectId)}>
-              Unassigned
+            <DropdownMenuItem onClick={() => setExpanded(!expanded)}>
+              <MessageSquare className="h-4 w-4 mr-2" />
+              Comments
             </DropdownMenuItem>
-            {members.map((member) => (
-              <DropdownMenuItem
-                key={member.id}
-                onClick={() => assignTodo(todo.id, member.id, projectId)}
-              >
-                {member.full_name || member.email}
-              </DropdownMenuItem>
-            ))}
+            {!assignee && (
+              <DropdownMenu>
+                <DropdownMenuTrigger className="w-full">
+                  <DropdownMenuItem>
+                    <FileText className="h-4 w-4 mr-2" />
+                    Assign
+                  </DropdownMenuItem>
+                </DropdownMenuTrigger>
+              </DropdownMenu>
+            )}
+            {members.filter((m) => m.id !== todo.assigned_to).length > 0 && !assignee && (
+              <>
+                {members.map((member) => (
+                  <DropdownMenuItem
+                    key={member.id}
+                    onClick={() => assignTodo(todo.id, member.id, projectId)}
+                    className="pl-8"
+                  >
+                    {member.full_name || member.email}
+                  </DropdownMenuItem>
+                ))}
+              </>
+            )}
+            <DropdownMenuItem
+              onClick={() => deleteTodo(todo.id, projectId)}
+              className="text-destructive"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        {assignee && (
-          <Avatar className="h-5 w-5 shrink-0">
-            <AvatarFallback className="text-[10px]">
-              {getInitials(assignee)}
-            </AvatarFallback>
-          </Avatar>
-        )}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-6 w-6 opacity-0 group-hover:opacity-100"
-          onClick={() => setExpanded(!expanded)}
-        >
-          <MessageSquare className="h-3 w-3" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-6 w-6 opacity-0 group-hover:opacity-100 text-destructive"
-          onClick={() => deleteTodo(todo.id, projectId)}
-        >
-          <Trash2 className="h-3 w-3" />
-        </Button>
       </div>
 
       {expanded && (
-        <div className="ml-7 mb-3 mt-1 border-l-2 border-muted pl-3">
+        <div className="ml-8 mb-1 mt-3 border-l-2 border-bc-divider pl-4">
           {comments.length > 0 && (
-            <div className="space-y-2 mb-2">
+            <div className="space-y-3 mb-3">
               {comments.map((comment) => {
                 const author = members.find((m) => m.id === comment.created_by);
                 return (
                   <div key={comment.id} className="flex gap-2 group/comment">
-                    <Avatar className="h-5 w-5 mt-0.5 shrink-0">
+                    <Avatar className="h-6 w-6 mt-0.5 shrink-0">
                       <AvatarFallback className="text-[10px]">
                         {getInitials(author)}
                       </AvatarFallback>
@@ -189,7 +244,7 @@ export function TodoItem({
                         <span className="text-sm font-medium">
                           {author?.full_name || author?.email || "Unknown"}
                         </span>
-                        <span className="text-sm text-muted-foreground">
+                        <span className="text-sm text-bc-meta">
                           {new Date(comment.created_at).toLocaleDateString()}
                         </span>
                         {comment.created_by === currentUserId && (
@@ -203,7 +258,7 @@ export function TodoItem({
                           </button>
                         )}
                       </div>
-                      <p className="text-base whitespace-pre-wrap">
+                      <p className="text-base whitespace-pre-wrap mt-0.5">
                         {comment.content}
                       </p>
                     </div>
@@ -226,6 +281,6 @@ export function TodoItem({
           </form>
         </div>
       )}
-    </div>
+    </li>
   );
 }

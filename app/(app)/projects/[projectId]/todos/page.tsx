@@ -61,9 +61,10 @@ export default async function TodosPage({
 
   return (
     <>
-      <div className="flex justify-end mb-4">
+      <div className="text-center mb-8">
+        <h2 className="text-2xl font-extrabold tracking-tight mb-3">To-dos</h2>
         <CreateTodoListDialog projectId={projectId}>
-          <Button size="sm">
+          <Button variant="default" size="sm">
             <Plus className="h-4 w-4 mr-1" />
             New list
           </Button>
@@ -71,9 +72,9 @@ export default async function TodosPage({
       </div>
 
       {(!todoLists || todoLists.length === 0) ? (
-        <div className="text-center py-12">
-          <h3 className="text-lg font-medium">No to-do lists yet</h3>
-          <p className="text-muted-foreground mt-1 mb-4">
+        <div className="text-center py-16">
+          <h3 className="text-lg font-medium text-bc-meta">No to-do lists yet</h3>
+          <p className="text-bc-meta mt-1 mb-4">
             Create a list to start tracking tasks
           </p>
           <CreateTodoListDialog projectId={projectId}>
@@ -84,7 +85,7 @@ export default async function TodosPage({
           </CreateTodoListDialog>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-12">
           {todoLists.map((list, index) => (
             <TodoListCard
               key={list.id}

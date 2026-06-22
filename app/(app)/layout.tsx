@@ -54,14 +54,12 @@ export default async function AppLayout({
     .eq("read", false);
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="min-h-screen bg-background">
       <Sidebar projects={projects} />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header profile={profile} unreadNotifications={unreadCount || 0} />
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">
-          {children}
-        </main>
-      </div>
+      <Header profile={profile} unreadNotifications={unreadCount || 0} />
+      <main className="max-w-3xl mx-auto px-4 py-8 md:py-12">
+        {children}
+      </main>
       <Toaster />
     </div>
   );

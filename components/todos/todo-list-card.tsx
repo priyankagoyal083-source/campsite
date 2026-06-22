@@ -1,6 +1,5 @@
 "use client";
 
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -8,7 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreVertical, ArrowUp, ArrowDown, Pencil, Trash2 } from "lucide-react";
+import { MoreHorizontal, ArrowUp, ArrowDown, Pencil, Trash2 } from "lucide-react";
 import { TodoItem } from "./todo-item";
 import { AddTodoForm } from "./add-todo-form";
 import { EditTodoListDialog } from "./edit-todo-list-dialog";
@@ -16,6 +15,41 @@ import { deleteTodoList, reorderTodoList } from "@/actions/todos";
 import { toast } from "sonner";
 import type { Profile } from "@/lib/types/database";
 import { useState } from "react";
+
+function ProgressPie({ completed, total }: { completed: number; total: number }) {
+  const size = 28;
+  const strokeWidth = 3;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const percent = total > 0 ? completed / total : 0;
+  const offset = circumference * (1 - percent);
+
+  return (
+    <svg width={size} height={size} className="shrink-0 -rotate-90">
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={radius}
+        fill="none"
+        stroke="var(--bc-divider)"
+        strokeWidth={strokeWidth}
+      />
+      {total > 0 && (
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke="var(--bc-green)"
+          strokeWidth={strokeWidth}
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          strokeLinecap="round"
+        />
+      )}
+    </svg>
+  );
+}
 
 export function TodoListCard({
   list,
@@ -58,80 +92,71 @@ export function TodoListCard({
 
   return (
     <>
-      <Card>
-        <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-base">{list.name}</CardTitle>
-            <div className="flex items-center gap-1">
-              <span className="text-xs text-muted-foreground mr-1">
-                {completedCount}/{todos.length}
-              </span>
-              <DropdownMenu>
-                <DropdownMenuTrigger
-                  render={
-                    <Button variant="ghost" size="icon-sm" />
-                  }
-                >
-                  <MoreVertical className="h-4 w-4" />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  {!isFirst && (
-                    <DropdownMenuItem onClick={() => handleReorder("up")}>
-                      <ArrowUp className="h-4 w-4 mr-2" />
-                      Move up
-                    </DropdownMenuItem>
-                  )}
-                  {!isLast && (
-                    <DropdownMenuItem onClick={() => handleReorder("down")}>
-                      <ArrowDown className="h-4 w-4 mr-2" />
-                      Move down
-                    </DropdownMenuItem>
-                  )}
-                  <DropdownMenuItem onClick={() => setEditOpen(true)}>
-                    <Pencil className="h-4 w-4 mr-2" />
-                    Edit
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={handleDelete}
-                    className="text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+      <section>
+        <header className="flex items-center gap-3 mb-3">
+          <ProgressPie completed={completedCount} total={todos.length} />
+          <div className="flex-1 min-w-0">
+            <h2 className="text-xl font-extrabold tracking-tight truncate">
+              {list.name}
+            </h2>
+            {list.description && (
+              <p className="text-sm text-bc-meta mt-0.5">{list.description}</p>
+            )}
           </div>
-          {list.description && (
-            <p className="text-sm text-muted-foreground">{list.description}</p>
-          )}
-          {todos.length > 0 && (
-            <div className="w-full bg-muted rounded-full h-1.5 mt-2">
-              <div
-                className="bg-primary h-1.5 rounded-full transition-all"
-                style={{
-                  width: `${todos.length > 0 ? (completedCount / todos.length) * 100 : 0}%`,
-                }}
-              />
-            </div>
-          )}
-        </CardHeader>
-        <CardContent>
-          <div className="divide-y">
-            {todos.map((todo) => (
-              <TodoItem
-                key={todo.id}
-                todo={todo}
-                projectId={projectId}
-                members={members}
-                comments={comments.filter((c) => c.todo_id === todo.id)}
-                currentUserId={currentUserId}
-              />
-            ))}
-          </div>
-          <AddTodoForm todoListId={list.id} projectId={projectId} />
-        </CardContent>
-      </Card>
+          <span className="text-sm text-bc-meta whitespace-nowrap">
+            {completedCount}/{todos.length}
+          </span>
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button variant="ghost" size="icon-sm" className="text-bc-meta" />
+              }
+            >
+              <MoreHorizontal className="h-4 w-4" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {!isFirst && (
+                <DropdownMenuItem onClick={() => handleReorder("up")}>
+                  <ArrowUp className="h-4 w-4 mr-2" />
+                  Move up
+                </DropdownMenuItem>
+              )}
+              {!isLast && (
+                <DropdownMenuItem onClick={() => handleReorder("down")}>
+                  <ArrowDown className="h-4 w-4 mr-2" />
+                  Move down
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem onClick={() => setEditOpen(true)}>
+                <Pencil className="h-4 w-4 mr-2" />
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={handleDelete}
+                className="text-destructive"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </header>
+
+        <ul className="divide-y divide-bc-divider border-t border-bc-divider">
+          {todos.map((todo) => (
+            <TodoItem
+              key={todo.id}
+              todo={todo}
+              projectId={projectId}
+              members={members}
+              comments={comments.filter((c) => c.todo_id === todo.id)}
+              currentUserId={currentUserId}
+            />
+          ))}
+        </ul>
+
+        <AddTodoForm todoListId={list.id} projectId={projectId} />
+      </section>
 
       <EditTodoListDialog
         list={list}
