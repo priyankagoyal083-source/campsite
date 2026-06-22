@@ -92,7 +92,7 @@ export async function createTodoComment(
           link: `/projects/${projectId}/todos`,
         });
 
-        sendEmail({
+        await sendEmail({
           to: profile.email,
           subject: `[${project?.name || "Campsite"}] ${commenterName} mentioned you`,
           html: `

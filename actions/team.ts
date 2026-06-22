@@ -103,7 +103,7 @@ export async function inviteMember(projectId: string, formData: FormData) {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://basecamp-nu-bice.vercel.app";
   const inviteUrl = `${appUrl}/invite/${invitation.token}`;
 
-  sendEmail({
+  await sendEmail({
     to: email,
     subject: `${inviterName} invited you to "${projectName}" on Campsite`,
     html: `

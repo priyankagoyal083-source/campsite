@@ -152,7 +152,7 @@ export async function assignTodo(
 
     if (assignee?.email) {
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://basecamp-nu-bice.vercel.app";
-      sendEmail({
+      await sendEmail({
         to: assignee.email,
         subject: `[${project?.name || "Campsite"}] To-do assigned to you: ${todo.title}`,
         html: `
