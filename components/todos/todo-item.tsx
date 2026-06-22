@@ -4,7 +4,7 @@ import { toggleTodo, deleteTodo, assignTodo } from "@/actions/todos";
 import { createTodoComment, deleteTodoComment } from "@/actions/todo-comments";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import { MentionTextarea } from "@/components/ui/mention-textarea";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -85,6 +85,7 @@ export function TodoItem({
   const [, startTransition] = useTransition();
   const [expanded, setExpanded] = useState(false);
   const [posting, setPosting] = useState(false);
+  const [commentText, setCommentText] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
 
   const { attributes, listeners, setNodeRef, transform, isDragging } =
@@ -104,12 +105,11 @@ export function TodoItem({
   }
 
   async function handlePostComment(formData: FormData) {
-    const content = formData.get("content") as string;
-    if (!content.trim()) return;
+    if (!commentText.trim()) return;
     setPosting(true);
     await createTodoComment(todo.id, projectId, formData);
     setPosting(false);
-    formRef.current?.reset();
+    setCommentText("");
   }
 
   function getInitials(profile: Profile | undefined) {
@@ -292,12 +292,14 @@ export function TodoItem({
             </div>
           )}
           <form ref={formRef} action={handlePostComment} className="flex gap-2">
-            <Textarea
+            <MentionTextarea
               name="content"
-              placeholder="Add a comment..."
-              rows={1}
-              className="text-sm min-h-[32px] resize-none"
+              members={members}
+              placeholder="Add a comment... (type @ to mention)"
               required
+              className="text-sm min-h-[32px] flex-1"
+              value={commentText}
+              onChange={setCommentText}
             />
             <Button type="submit" size="sm" disabled={posting} className="shrink-0">
               {posting ? "..." : "Post"}
