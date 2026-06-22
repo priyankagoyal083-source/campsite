@@ -17,17 +17,21 @@ export async function sendEmail({
 }) {
   if (!resend) {
     console.log(`[Email skipped - no RESEND_API_KEY] To: ${to}, Subject: ${subject}`);
-    return;
+    return { error: "No RESEND_API_KEY configured" };
   }
 
-  try {
-    await resend.emails.send({
-      from: FROM_EMAIL,
-      to,
-      subject,
-      html,
-    });
-  } catch (err) {
-    console.error("Failed to send email:", err);
+  const { data, error } = await resend.emails.send({
+    from: FROM_EMAIL,
+    to,
+    subject,
+    html,
+  });
+
+  if (error) {
+    console.error("Failed to send email:", error);
+    return { error: error.message };
   }
+
+  console.log(`[Email sent] To: ${to}, Id: ${data?.id}`);
+  return { id: data?.id };
 }
