@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { sendEmail } from "@/lib/email";
 
 export async function addExistingMember(projectId: string, userId: string) {
   const supabase = await createClient();
@@ -84,6 +85,39 @@ export async function inviteMember(projectId: string, formData: FormData) {
     .single();
 
   if (error) return { error: error.message };
+
+  const { data: inviter } = await supabase
+    .from("profiles")
+    .select("full_name, email")
+    .eq("id", user.id)
+    .single();
+
+  const { data: project } = await supabase
+    .from("projects")
+    .select("name")
+    .eq("id", projectId)
+    .single();
+
+  const inviterName = inviter?.full_name || inviter?.email || "Someone";
+  const projectName = project?.name || "a project";
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://basecamp-nu-bice.vercel.app";
+  const inviteUrl = `${appUrl}/invite/${invitation.token}`;
+
+  sendEmail({
+    to: email,
+    subject: `${inviterName} invited you to "${projectName}" on Campsite`,
+    html: `
+      <p>Hi there,</p>
+      <p><strong>${inviterName}</strong> invited you to join <strong>${projectName}</strong> on Campsite.</p>
+      <p style="margin:24px 0;">
+        <a href="${inviteUrl}" style="background:#222;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;display:inline-block;">
+          Accept invitation
+        </a>
+      </p>
+      <p style="color:#888;font-size:14px;">Or copy this link: ${inviteUrl}</p>
+      <p style="color:#888;font-size:14px;">This invitation expires in 7 days.</p>
+    `,
+  });
 
   revalidatePath(`/projects/${projectId}/people`);
   return { token: invitation.token };
