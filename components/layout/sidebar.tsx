@@ -39,7 +39,7 @@ export function Sidebar({ projects }: { projects: Project[] }) {
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-72 bg-background border-r border-bc-divider flex flex-col transition-transform duration-200",
+          "fixed inset-y-0 left-0 z-50 w-72 bg-card border-r border-bc-divider flex flex-col transition-transform duration-200",
           open ? "translate-x-0" : "-translate-x-full"
         )}
       >

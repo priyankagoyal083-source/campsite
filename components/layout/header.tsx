@@ -35,7 +35,7 @@ export function Header({
   }
 
   return (
-    <header className="border-b border-bc-divider px-4 md:px-6 h-14 flex items-center">
+    <header className="border-b border-bc-divider bg-card px-4 md:px-6 h-14 flex items-center">
       <Button
         variant="ghost"
         size="icon"

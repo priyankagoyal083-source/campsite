@@ -134,7 +134,7 @@ export function TodoItem({
         {comments.length > 0 && (
           <button
             onClick={() => setExpanded(!expanded)}
-            className="flex items-center gap-1 text-xs text-bc-meta bg-muted rounded-full px-2 py-0.5 hover:text-foreground"
+            className="flex items-center gap-1 text-xs text-white bg-bc-comment-bg rounded-full px-2 py-0.5 hover:opacity-80"
           >
             <MessageSquare className="h-3 w-3" />
             {comments.length}
