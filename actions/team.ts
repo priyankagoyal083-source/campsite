@@ -117,7 +117,7 @@ export async function acceptInvitation(token: string) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) throw new Error("Unauthorized");
+  if (!user) return { error: "Please sign in first to accept this invitation" };
 
   const { data: invitation, error: fetchError } = await supabase
     .from("invitations")

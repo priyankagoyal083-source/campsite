@@ -14,7 +14,7 @@ export default function InvitePage() {
   const router = useRouter();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [mode, setMode] = useState<"loading" | "accept" | "signup" | "login">("loading");
+  const [mode, setMode] = useState<"loading" | "accept" | "signup" | "login" | "confirm-email">("loading");
 
   useEffect(() => {
     async function checkAuth() {
@@ -53,6 +53,10 @@ export default function InvitePage() {
     const acceptResult = await acceptInvitation(token);
     setPending(false);
     if (acceptResult?.error) {
+      if (acceptResult.error.includes("sign in")) {
+        setMode("confirm-email");
+        return;
+      }
       setError(acceptResult.error);
       return;
     }
@@ -134,6 +138,18 @@ export default function InvitePage() {
               Sign in
             </button>
           </p>
+        </>
+      )}
+
+      {mode === "confirm-email" && (
+        <>
+          <p className="text-bc-green font-medium mb-2">Account created!</p>
+          <p className="text-muted-foreground text-sm mb-4">
+            Check your email and click the confirmation link, then come back here and sign in to join the project.
+          </p>
+          <Button className="w-full" onClick={() => setMode("login")}>
+            Sign in
+          </Button>
         </>
       )}
 
