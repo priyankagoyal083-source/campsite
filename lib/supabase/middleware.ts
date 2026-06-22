@@ -51,9 +51,10 @@ export async function updateSession(request: NextRequest) {
   const isAuthPage = request.nextUrl.pathname.startsWith("/login");
   const isAuthCallback = request.nextUrl.pathname.startsWith("/auth/callback");
   const isInvitePage = request.nextUrl.pathname.startsWith("/invite/");
+  const isApiRoute = request.nextUrl.pathname.startsWith("/api/");
   const isPublicPage = request.nextUrl.pathname === "/";
 
-  if (!user && !isAuthPage && !isAuthCallback && !isInvitePage && !isPublicPage) {
+  if (!user && !isAuthPage && !isAuthCallback && !isInvitePage && !isApiRoute && !isPublicPage) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
