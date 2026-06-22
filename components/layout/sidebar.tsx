@@ -7,12 +7,13 @@ import type { Project } from "@/lib/types/database";
 import {
   LayoutDashboard,
   FolderKanban,
+  ShieldCheck,
   X,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 
-export function Sidebar({ projects }: { projects: Project[] }) {
+export function Sidebar({ projects, isAdmin }: { projects: Project[]; isAdmin?: boolean }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -76,6 +77,21 @@ export function Sidebar({ projects }: { projects: Project[] }) {
               {item.label}
             </Link>
           ))}
+          {isAdmin && (
+            <Link
+              href="/admin"
+              onClick={() => setOpen(false)}
+              className={cn(
+                "flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                pathname.startsWith("/admin")
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )}
+            >
+              <ShieldCheck className="h-4 w-4" />
+              Admin
+            </Link>
+          )}
           {projects.length > 0 && (
             <div className="pt-4">
               <p className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">

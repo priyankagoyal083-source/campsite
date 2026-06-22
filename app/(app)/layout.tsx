@@ -55,7 +55,7 @@ export default async function AppLayout({
 
   return (
     <div className="min-h-screen bg-background">
-      <Sidebar projects={projects} />
+      <Sidebar projects={projects} isAdmin={profile.is_admin} />
       <Header profile={profile} unreadNotifications={unreadCount || 0} />
       <main className="max-w-3xl mx-auto px-4 py-8 md:py-12">
         {children}
