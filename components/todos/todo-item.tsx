@@ -16,6 +16,7 @@ import { Trash2, MessageSquare, FileText, MoreHorizontal, GripVertical } from "l
 import { cn } from "@/lib/utils";
 import type { Profile } from "@/lib/types/database";
 import { useOptimistic, useTransition, useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 
 type TodoComment = {
   id: string;
@@ -83,6 +84,7 @@ export function TodoItem({
     todo.completed
   );
   const [, startTransition] = useTransition();
+  const router = useRouter();
   const [expanded, setExpanded] = useState(false);
   const [posting, setPosting] = useState(false);
   const [commentText, setCommentText] = useState("");
@@ -101,6 +103,7 @@ export function TodoItem({
     startTransition(async () => {
       setOptimisticCompleted(!optimisticCompleted);
       await toggleTodo(todo.id, !todo.completed, projectId);
+      router.refresh();
     });
   }
 

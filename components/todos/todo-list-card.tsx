@@ -83,6 +83,10 @@ export function TodoListCard({
   const [editOpen, setEditOpen] = useState(false);
   const { setNodeRef, isOver } = useDroppable({ id: list.id });
   const completedCount = todos.filter((t) => t.completed).length;
+  const sortedTodos = [...todos].sort((a, b) => {
+    if (a.completed === b.completed) return 0;
+    return a.completed ? 1 : -1;
+  });
 
   async function handleDelete() {
     if (!confirm(`Delete "${list.name}" and all its to-dos?`)) return;
@@ -154,7 +158,7 @@ export function TodoListCard({
             isOver && "bg-bc-link/5 border-bc-link/30"
           )}
         >
-          {todos.map((todo) => (
+          {sortedTodos.map((todo) => (
             <TodoItem
               key={todo.id}
               todo={todo}
