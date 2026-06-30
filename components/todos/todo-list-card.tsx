@@ -8,7 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, ArrowUp, ArrowDown, Pencil, Trash2 } from "lucide-react";
+import { MoreHorizontal, ArrowUp, ArrowDown, Pencil, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import { TodoItem } from "./todo-item";
 import { AddTodoForm } from "./add-todo-form";
 import { EditTodoListDialog } from "./edit-todo-list-dialog";
@@ -81,12 +81,12 @@ export function TodoListCard({
   isDndEnabled?: boolean;
 }) {
   const [editOpen, setEditOpen] = useState(false);
+  const [showCompleted, setShowCompleted] = useState(false);
   const { setNodeRef, isOver } = useDroppable({ id: list.id });
-  const completedCount = todos.filter((t) => t.completed).length;
-  const sortedTodos = [...todos].sort((a, b) => {
-    if (a.completed === b.completed) return 0;
-    return a.completed ? 1 : -1;
-  });
+
+  const activeTodos = todos.filter((t) => !t.completed);
+  const completedTodos = todos.filter((t) => t.completed);
+  const completedCount = completedTodos.length;
 
   async function handleDelete() {
     if (!confirm(`Delete "${list.name}" and all its to-dos?`)) return;
@@ -158,7 +158,7 @@ export function TodoListCard({
             isOver && "bg-bc-link/5 border-bc-link/30"
           )}
         >
-          {sortedTodos.map((todo) => (
+          {activeTodos.map((todo) => (
             <TodoItem
               key={todo.id}
               todo={todo}
@@ -169,14 +169,46 @@ export function TodoListCard({
               isDraggable={isDndEnabled}
             />
           ))}
-          {todos.length === 0 && (
+          {activeTodos.length === 0 && (
             <li className="py-4 text-center text-sm text-bc-meta">
-              Drop a to-do here
+              {todos.length === 0 ? "Drop a to-do here" : "All done!"}
             </li>
           )}
         </ul>
 
         <AddTodoForm todoListId={list.id} projectId={projectId} />
+
+        {completedCount > 0 && (
+          <div className="mt-2">
+            <button
+              onClick={() => setShowCompleted(!showCompleted)}
+              className="flex items-center gap-1 text-sm text-bc-meta hover:text-foreground transition-colors"
+            >
+              {showCompleted ? (
+                <ChevronUp className="h-3.5 w-3.5" />
+              ) : (
+                <ChevronDown className="h-3.5 w-3.5" />
+              )}
+              {completedCount} completed
+            </button>
+
+            {showCompleted && (
+              <ul className="divide-y divide-bc-divider border-t border-bc-divider mt-2">
+                {completedTodos.map((todo) => (
+                  <TodoItem
+                    key={todo.id}
+                    todo={todo}
+                    projectId={projectId}
+                    members={members}
+                    comments={comments.filter((c) => c.todo_id === todo.id)}
+                    currentUserId={currentUserId}
+                    isDraggable={false}
+                  />
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
       </section>
 
       <EditTodoListDialog
