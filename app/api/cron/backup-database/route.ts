@@ -1,5 +1,5 @@
 import { Client } from "pg";
-import { put } from "@vercel/blob";
+import { put, list, del } from "@vercel/blob";
 import { NextResponse } from "next/server";
 
 const TABLES = [
@@ -14,6 +14,8 @@ const TABLES = [
   "invitations",
   "notifications",
 ];
+
+const RETENTION_DAYS = 30;
 
 export async function GET(request: Request) {
   const authHeader = request.headers.get("authorization");
@@ -43,6 +45,16 @@ export async function GET(request: Request) {
       contentType: "application/json",
     });
 
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - RETENTION_DAYS);
+
+    const { blobs } = await list({ prefix: "backups/" });
+    const expired = blobs.filter((b) => new Date(b.uploadedAt) < cutoff);
+
+    if (expired.length > 0) {
+      await del(expired.map((b) => b.url));
+    }
+
     return NextResponse.json({
       ok: true,
       url: blob.url,
@@ -50,6 +62,8 @@ export async function GET(request: Request) {
       rowCounts: Object.fromEntries(
         TABLES.map((t) => [t, backup[t].length])
       ),
+      deletedExpiredBackups: expired.length,
+      retentionDays: RETENTION_DAYS,
     });
   } finally {
     await client.end();
