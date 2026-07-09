@@ -204,6 +204,26 @@ export async function moveTodoToList(
   revalidatePath(`/projects/${projectId}/todos`);
 }
 
+export async function updateTodo(
+  todoId: string,
+  projectId: string,
+  title: string
+) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Unauthorized");
+
+  const { error } = await supabase
+    .from("todos")
+    .update({ title, updated_at: new Date().toISOString() })
+    .eq("id", todoId);
+
+  if (error) return { error: error.message };
+  revalidatePath(`/projects/${projectId}/todos`);
+}
+
 export async function deleteTodo(todoId: string, projectId: string) {
   const supabase = await createClient();
   const {

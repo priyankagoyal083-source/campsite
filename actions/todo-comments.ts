@@ -112,6 +112,27 @@ export async function createTodoComment(
   revalidatePath(`/projects/${projectId}/todos`);
 }
 
+export async function updateTodoComment(
+  commentId: string,
+  projectId: string,
+  content: string
+) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Unauthorized");
+
+  const { error } = await supabase
+    .from("todo_comments")
+    .update({ content, updated_at: new Date().toISOString() })
+    .eq("id", commentId)
+    .eq("created_by", user.id);
+
+  if (error) return { error: error.message };
+  revalidatePath(`/projects/${projectId}/todos`);
+}
+
 export async function deleteTodoComment(
   commentId: string,
   projectId: string

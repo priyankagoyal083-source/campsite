@@ -1,7 +1,7 @@
 "use client";
 
-import { toggleTodo, deleteTodo, assignTodo } from "@/actions/todos";
-import { createTodoComment, deleteTodoComment } from "@/actions/todo-comments";
+import { toggleTodo, deleteTodo, assignTodo, updateTodo } from "@/actions/todos";
+import { createTodoComment, deleteTodoComment, updateTodoComment } from "@/actions/todo-comments";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { MentionTextarea } from "@/components/ui/mention-textarea";
@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useDraggable } from "@dnd-kit/core";
-import { Trash2, MessageSquare, FileText, MoreHorizontal, GripVertical } from "lucide-react";
+import { Trash2, MessageSquare, FileText, MoreHorizontal, GripVertical, Pencil, X, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Profile } from "@/lib/types/database";
 import { useOptimistic, useTransition, useState, useRef } from "react";
@@ -89,6 +89,11 @@ export function TodoItem({
   const [posting, setPosting] = useState(false);
   const [commentText, setCommentText] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [editTitle, setEditTitle] = useState(todo.title);
+  const [savingTitle, setSavingTitle] = useState(false);
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editCommentText, setEditCommentText] = useState("");
 
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({ id: todo.id, disabled: !isDraggable });
@@ -113,6 +118,31 @@ export function TodoItem({
     await createTodoComment(todo.id, projectId, formData);
     setPosting(false);
     setCommentText("");
+  }
+
+  async function handleSaveTitle() {
+    if (!editTitle.trim() || editTitle === todo.title) {
+      setEditingTitle(false);
+      setEditTitle(todo.title);
+      return;
+    }
+    setSavingTitle(true);
+    await updateTodo(todo.id, projectId, editTitle.trim());
+    setSavingTitle(false);
+    setEditingTitle(false);
+    router.refresh();
+  }
+
+  function startEditComment(comment: TodoComment) {
+    setEditingCommentId(comment.id);
+    setEditCommentText(comment.content);
+  }
+
+  async function handleSaveComment(commentId: string) {
+    if (!editCommentText.trim()) return;
+    await updateTodoComment(commentId, projectId, editCommentText.trim());
+    setEditingCommentId(null);
+    router.refresh();
   }
 
   function getInitials(profile: Profile | undefined) {
@@ -146,17 +176,38 @@ export function TodoItem({
         )}
         <RoundCheckbox checked={optimisticCompleted} onChange={handleToggle} />
 
-        <span
-          className={cn(
-            "flex-1 text-base cursor-pointer transition-colors",
-            optimisticCompleted
-              ? "text-bc-meta"
-              : "text-foreground hover:text-bc-link"
-          )}
-          onClick={() => setExpanded(!expanded)}
-        >
-          {todo.title}
-        </span>
+        {editingTitle ? (
+          <div className="flex-1 flex items-center gap-1">
+            <input
+              autoFocus
+              value={editTitle}
+              onChange={(e) => setEditTitle(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleSaveTitle();
+                if (e.key === "Escape") { setEditingTitle(false); setEditTitle(todo.title); }
+              }}
+              className="flex-1 text-base bg-transparent border-b border-bc-link outline-none"
+            />
+            <button onClick={handleSaveTitle} disabled={savingTitle} className="text-bc-green hover:opacity-80">
+              <Check className="h-4 w-4" />
+            </button>
+            <button onClick={() => { setEditingTitle(false); setEditTitle(todo.title); }} className="text-bc-meta hover:text-foreground">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        ) : (
+          <span
+            className={cn(
+              "flex-1 text-base cursor-pointer transition-colors",
+              optimisticCompleted
+                ? "text-bc-meta"
+                : "text-foreground hover:text-bc-link"
+            )}
+            onClick={() => setExpanded(!expanded)}
+          >
+            {todo.title}
+          </span>
+        )}
 
         {comments.length > 0 && (
           <button
@@ -215,6 +266,10 @@ export function TodoItem({
             <MoreHorizontal className="h-4 w-4" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => { setEditingTitle(true); setEditTitle(todo.title); }}>
+              <Pencil className="h-4 w-4 mr-2" />
+              Edit
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setExpanded(!expanded)}>
               <MessageSquare className="h-4 w-4 mr-2" />
               Comments
@@ -274,20 +329,50 @@ export function TodoItem({
                         <span className="text-sm text-bc-meta">
                           {new Date(comment.created_at).toLocaleDateString()}
                         </span>
-                        {comment.created_by === currentUserId && (
-                          <button
-                            onClick={() =>
-                              deleteTodoComment(comment.id, projectId)
-                            }
-                            className="opacity-0 group-hover/comment:opacity-100 text-destructive"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </button>
+                        {comment.created_by === currentUserId && editingCommentId !== comment.id && (
+                          <>
+                            <button
+                              onClick={() => startEditComment(comment)}
+                              className="opacity-0 group-hover/comment:opacity-100 text-bc-meta hover:text-foreground"
+                            >
+                              <Pencil className="h-3 w-3" />
+                            </button>
+                            <button
+                              onClick={() => deleteTodoComment(comment.id, projectId)}
+                              className="opacity-0 group-hover/comment:opacity-100 text-destructive"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </button>
+                          </>
                         )}
                       </div>
-                      <p className="text-base whitespace-pre-wrap mt-0.5">
-                        {comment.content}
-                      </p>
+                      {editingCommentId === comment.id ? (
+                        <div className="mt-1 flex gap-2">
+                          <textarea
+                            autoFocus
+                            value={editCommentText}
+                            onChange={(e) => setEditCommentText(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Escape") setEditingCommentId(null);
+                              if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleSaveComment(comment.id);
+                            }}
+                            className="flex-1 text-base bg-transparent border border-bc-divider rounded px-2 py-1 outline-none focus:border-bc-link resize-none"
+                            rows={2}
+                          />
+                          <div className="flex flex-col gap-1">
+                            <button onClick={() => handleSaveComment(comment.id)} className="text-bc-green hover:opacity-80">
+                              <Check className="h-4 w-4" />
+                            </button>
+                            <button onClick={() => setEditingCommentId(null)} className="text-bc-meta hover:text-foreground">
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-base whitespace-pre-wrap mt-0.5">
+                          {comment.content}
+                        </p>
+                      )}
                     </div>
                   </div>
                 );
