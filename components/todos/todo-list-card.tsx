@@ -158,15 +158,18 @@ export function TodoListCard({
             isOver && "bg-bc-link/5 border-bc-link/30"
           )}
         >
-          {activeTodos.map((todo) => (
+          {activeTodos.map((todo, index) => (
             <TodoItem
               key={todo.id}
               todo={todo}
+              todoListId={list.id}
               projectId={projectId}
               members={members}
               comments={comments.filter((c) => c.todo_id === todo.id)}
               currentUserId={currentUserId}
               isDraggable={isDndEnabled}
+              isFirst={index === 0}
+              isLast={index === activeTodos.length - 1}
             />
           ))}
           {activeTodos.length === 0 && (
@@ -198,6 +201,7 @@ export function TodoListCard({
                   <TodoItem
                     key={todo.id}
                     todo={todo}
+                    todoListId={list.id}
                     projectId={projectId}
                     members={members}
                     comments={comments.filter((c) => c.todo_id === todo.id)}

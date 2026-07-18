@@ -1,6 +1,6 @@
 "use client";
 
-import { toggleTodo, deleteTodo, assignTodo, updateTodo } from "@/actions/todos";
+import { toggleTodo, deleteTodo, assignTodo, updateTodo, reorderTodo } from "@/actions/todos";
 import { createTodoComment, deleteTodoComment, updateTodoComment } from "@/actions/todo-comments";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useDraggable } from "@dnd-kit/core";
-import { Trash2, MessageSquare, FileText, MoreHorizontal, GripVertical, Pencil, X, Check } from "lucide-react";
+import { Trash2, MessageSquare, FileText, MoreHorizontal, GripVertical, Pencil, X, Check, ArrowUp, ArrowDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Profile } from "@/lib/types/database";
 import { useOptimistic, useTransition, useState, useRef } from "react";
@@ -61,11 +61,14 @@ function RoundCheckbox({
 
 export function TodoItem({
   todo,
+  todoListId,
   projectId,
   members,
   comments,
   currentUserId,
   isDraggable,
+  isFirst,
+  isLast,
 }: {
   todo: {
     id: string;
@@ -74,11 +77,14 @@ export function TodoItem({
     assigned_to: string | null;
     due_date: string | null;
   };
+  todoListId: string;
   projectId: string;
   members: Profile[];
   comments: TodoComment[];
   currentUserId: string;
   isDraggable?: boolean;
+  isFirst?: boolean;
+  isLast?: boolean;
 }) {
   const [optimisticCompleted, setOptimisticCompleted] = useOptimistic(
     todo.completed
@@ -270,6 +276,18 @@ export function TodoItem({
               <Pencil className="h-4 w-4 mr-2" />
               Edit
             </DropdownMenuItem>
+            {!isFirst && (
+              <DropdownMenuItem onClick={() => reorderTodo(todo.id, todoListId, projectId, "up")}>
+                <ArrowUp className="h-4 w-4 mr-2" />
+                Move up
+              </DropdownMenuItem>
+            )}
+            {!isLast && (
+              <DropdownMenuItem onClick={() => reorderTodo(todo.id, todoListId, projectId, "down")}>
+                <ArrowDown className="h-4 w-4 mr-2" />
+                Move down
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem onClick={() => setExpanded(!expanded)}>
               <MessageSquare className="h-4 w-4 mr-2" />
               Comments

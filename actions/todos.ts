@@ -204,6 +204,42 @@ export async function moveTodoToList(
   revalidatePath(`/projects/${projectId}/todos`);
 }
 
+export async function reorderTodo(
+  todoId: string,
+  todoListId: string,
+  projectId: string,
+  direction: "up" | "down"
+) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Unauthorized");
+
+  const { data: todos } = await supabase
+    .from("todos")
+    .select("id, position")
+    .eq("todo_list_id", todoListId)
+    .eq("completed", false)
+    .order("position", { ascending: true });
+
+  if (!todos) return { error: "Failed to fetch todos" };
+
+  const currentIndex = todos.findIndex((t) => t.id === todoId);
+  if (currentIndex === -1) return { error: "Todo not found" };
+
+  const swapIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
+  if (swapIndex < 0 || swapIndex >= todos.length) return;
+
+  const current = todos[currentIndex];
+  const swap = todos[swapIndex];
+
+  await supabase.from("todos").update({ position: swap.position }).eq("id", current.id);
+  await supabase.from("todos").update({ position: current.position }).eq("id", swap.id);
+
+  revalidatePath(`/projects/${projectId}/todos`);
+}
+
 export async function updateTodo(
   todoId: string,
   projectId: string,
