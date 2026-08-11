@@ -1,6 +1,7 @@
 "use client";
 
 import { useDroppable } from "@dnd-kit/core";
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -151,33 +152,38 @@ export function TodoListCard({
           </DropdownMenu>
         </header>
 
-        <ul
-          ref={setNodeRef}
-          className={cn(
-            "divide-y divide-bc-divider border-t border-bc-divider min-h-[40px] transition-colors rounded",
-            isOver && "bg-bc-link/5 border-bc-link/30"
-          )}
+        <SortableContext
+          items={activeTodos.map((t) => t.id)}
+          strategy={verticalListSortingStrategy}
         >
-          {activeTodos.map((todo, index) => (
-            <TodoItem
-              key={todo.id}
-              todo={todo}
-              todoListId={list.id}
-              projectId={projectId}
-              members={members}
-              comments={comments.filter((c) => c.todo_id === todo.id)}
-              currentUserId={currentUserId}
-              isDraggable={isDndEnabled}
-              isFirst={index === 0}
-              isLast={index === activeTodos.length - 1}
-            />
-          ))}
-          {activeTodos.length === 0 && (
-            <li className="py-4 text-center text-sm text-bc-meta">
-              {todos.length === 0 ? "Drop a to-do here" : "All done!"}
-            </li>
-          )}
-        </ul>
+          <ul
+            ref={setNodeRef}
+            className={cn(
+              "divide-y divide-bc-divider border-t border-bc-divider min-h-[40px] transition-colors rounded",
+              isOver && "bg-bc-link/5 border-bc-link/30"
+            )}
+          >
+            {activeTodos.map((todo, index) => (
+              <TodoItem
+                key={todo.id}
+                todo={todo}
+                todoListId={list.id}
+                projectId={projectId}
+                members={members}
+                comments={comments.filter((c) => c.todo_id === todo.id)}
+                currentUserId={currentUserId}
+                isDraggable={isDndEnabled}
+                isFirst={index === 0}
+                isLast={index === activeTodos.length - 1}
+              />
+            ))}
+            {activeTodos.length === 0 && (
+              <li className="py-4 text-center text-sm text-bc-meta">
+                {todos.length === 0 ? "Drop a to-do here" : "All done!"}
+              </li>
+            )}
+          </ul>
+        </SortableContext>
 
         <AddTodoForm todoListId={list.id} projectId={projectId} />
 

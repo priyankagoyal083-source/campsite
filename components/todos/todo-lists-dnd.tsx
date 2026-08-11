@@ -12,7 +12,8 @@ import {
 } from "@dnd-kit/core";
 import { useState, useEffect } from "react";
 import { TodoListCard } from "./todo-list-card";
-import { moveTodoToList } from "@/actions/todos";
+import { moveTodoToList, saveTodoOrder } from "@/actions/todos";
+import { arrayMove } from "@dnd-kit/sortable";
 import { toast } from "sonner";
 import type { Profile } from "@/lib/types/database";
 
@@ -82,6 +83,7 @@ export function TodoListsDnd({
 
     const todoId = active.id as string;
     const overId = over.id as string;
+    if (todoId === overId) return;
 
     const todo = allTodos.find((t) => t.id === todoId);
     if (!todo) return;
@@ -92,29 +94,43 @@ export function TodoListsDnd({
       targetListId = overId;
     } else {
       const overTodo = allTodos.find((t) => t.id === overId);
-      if (overTodo) {
-        targetListId = overTodo.todo_list_id;
-      }
+      if (overTodo) targetListId = overTodo.todo_list_id;
     }
 
-    if (!targetListId || targetListId === todo.todo_list_id) return;
+    if (!targetListId) return;
 
-    setAllTodos((prev) =>
-      prev.map((t) =>
-        t.id === todoId ? { ...t, todo_list_id: targetListId } : t
-      )
-    );
+    if (targetListId === todo.todo_list_id) {
+      // Within-list reorder
+      const listTodos = allTodos
+        .filter((t) => t.todo_list_id === targetListId && !t.completed);
+      const oldIndex = listTodos.findIndex((t) => t.id === todoId);
+      const newIndex = listTodos.findIndex((t) => t.id === overId);
+      if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) return;
 
-    const result = await moveTodoToList(todoId, targetListId, projectId);
-    if (result?.error) {
-      toast.error(result.error);
+      const reordered = arrayMove(listTodos, oldIndex, newIndex);
+      setAllTodos((prev) => {
+        const rest = prev.filter(
+          (t) => t.todo_list_id !== targetListId || t.completed
+        );
+        return [...rest, ...reordered];
+      });
+      await saveTodoOrder(reordered.map((t) => t.id), projectId);
+    } else {
+      // Cross-list move
       setAllTodos((prev) =>
         prev.map((t) =>
-          t.id === todoId
-            ? { ...t, todo_list_id: todo.todo_list_id }
-            : t
+          t.id === todoId ? { ...t, todo_list_id: targetListId! } : t
         )
       );
+      const result = await moveTodoToList(todoId, targetListId, projectId);
+      if (result?.error) {
+        toast.error(result.error);
+        setAllTodos((prev) =>
+          prev.map((t) =>
+            t.id === todoId ? { ...t, todo_list_id: todo.todo_list_id } : t
+          )
+        );
+      }
     }
   }
 

@@ -204,6 +204,22 @@ export async function moveTodoToList(
   revalidatePath(`/projects/${projectId}/todos`);
 }
 
+export async function saveTodoOrder(todoIds: string[], projectId: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Unauthorized");
+
+  await Promise.all(
+    todoIds.map((id, index) =>
+      supabase.from("todos").update({ position: index }).eq("id", id)
+    )
+  );
+
+  revalidatePath(`/projects/${projectId}/todos`);
+}
+
 export async function reorderTodo(
   todoId: string,
   todoListId: string,
