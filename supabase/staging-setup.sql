@@ -1,5 +1,5 @@
 -- Campsite: full schema setup (run once on a fresh Supabase project)
--- Generated from supabase/migrations/001-008
+-- Generated from supabase/migrations/001-009
 
 -- ============================================
 -- 001_profiles.sql
@@ -460,4 +460,10 @@ create policy "Users can delete own notifications"
 -- 008_admin.sql
 -- ============================================
 alter table public.profiles add column if not exists is_admin boolean default false;
+
+-- ============================================
+-- 009_todo_completed_by.sql
+-- ============================================
+alter table public.todos
+  add column if not exists completed_by uuid references public.profiles(id) on delete set null;
 

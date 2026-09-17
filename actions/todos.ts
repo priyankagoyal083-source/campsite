@@ -86,6 +86,7 @@ export async function toggleTodo(
     .update({
       completed,
       completed_at: completed ? new Date().toISOString() : null,
+      completed_by: completed ? user.id : null,
       updated_at: new Date().toISOString(),
     })
     .eq("id", todoId);
